@@ -4,8 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { User } from './users/entities/user.entity';
-import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
+import { ConfigModule, ConfigService } from '@nestjs/config'; // Import ConfigModule
 import { OpportunitiesModule } from './opportunities/opportunities.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { RabbitMQService } from './rabbitmq/rabbitmq.service';
@@ -16,16 +15,18 @@ import { RabbitMQService } from './rabbitmq/rabbitmq.service';
       isGlobal: true, // Makes the ConfigService available everywhere
       envFilePath: '.env', // Specify the path to your .env file (optional, defaults to './.env')
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432', 10),
-      username: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || '1234',
-      database: process.env.DB_NAME || 'volhub_db',
-      entities: [User],
-      synchronize: true,
-      autoLoadEntities: true,
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST'),
+        port: config.get<number>('DB_PORT'),
+        username: config.get<string>('DB_USER'),
+        password: config.get<string>('DB_PASSWORD'),
+        database: config.get<string>('DB_NAME'),
+        autoLoadEntities: true,
+        synchronize: true,
+      }),
     }),
     UsersModule,
     AuthModule,

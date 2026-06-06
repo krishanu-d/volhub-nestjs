@@ -42,7 +42,7 @@ export class RabbitMQService implements OnModuleInit {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to connect to RabbitMQ or assert exchange: ${error.message}`,
+        `Failed to connect to RabbitMQ or assert exchange: ${error}`,
       );
       // Consider more robust error handling / reconnection logic here for production
       throw error; // Re-throw to prevent app from starting if connection fails
@@ -63,7 +63,7 @@ export class RabbitMQService implements OnModuleInit {
         `Message published to exchange '${this.exchangeName}' with routing key '${routingKey}'`,
       );
     } catch (error) {
-      this.logger.error(`Failed to publish message: ${error.message}`);
+      this.logger.error(`Failed to publish message: ${error}`);
     }
   }
 
@@ -113,7 +113,7 @@ export class RabbitMQService implements OnModuleInit {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to publish notification '${eventType}': ${error.message}`,
+        `Failed to publish notification '${eventType}': ${error}`,
       );
     }
   }
