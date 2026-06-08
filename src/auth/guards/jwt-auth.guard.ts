@@ -8,8 +8,6 @@ import { AuthGuard } from '@nestjs/passport';
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
-    // Add your custom authentication logic here
-    // for example, calling super.logIn(request) to establish a session
     return super.canActivate(context);
   }
 
@@ -17,6 +15,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (err || !user) {
       throw err || new UnauthorizedException();
     }
+
+    // Block limited JWTs from hitting regular protected routes
+    if (user.isProfileComplete === false) {
+      throw new UnauthorizedException('Profile setup not complete');
+    }
+
     return user;
   }
 }

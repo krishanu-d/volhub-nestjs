@@ -10,7 +10,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger'; // Import ApiProperty
 import { OpportunityCategory, UserRole } from 'src/enums';
 
-export class CompleteInitialProfileDto {
+export class UserDTO {
   @ApiProperty({ description: 'The name of the user', required: false })
   @IsOptional()
   @IsString()

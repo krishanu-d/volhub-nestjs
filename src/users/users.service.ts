@@ -22,9 +22,9 @@ export class UsersService {
     return user === null ? undefined : user;
   }
 
-  async findUserByEmail(email: string): Promise<User | undefined> {
+  async findUserByEmail(email: string): Promise<User | null> {
     const user = await this.usersRepository.findOne({ where: { email } });
-    return user === null ? undefined : user;
+    return user === null ? null : user;
   }
 
   async createUser(userData: Partial<User>): Promise<User> {

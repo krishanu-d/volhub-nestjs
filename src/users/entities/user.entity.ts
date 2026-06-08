@@ -17,14 +17,14 @@ import { OpportunityCategory, UserRole } from 'src/enums';
 export class User {
   @ApiProperty({ description: 'The unique ID of the user', example: 1 })
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ApiProperty({
     description: 'The email address of the user',
     example: 'user@example.com',
   })
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @ApiProperty({
     description: 'The name of the user',
@@ -112,10 +112,10 @@ export class User {
   placeName?: string;
 
   @CreateDateColumn({ type: 'timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ApiProperty({
     description:
@@ -139,7 +139,7 @@ export class User {
     default: true,
   })
   @Column({ type: 'boolean', default: true })
-  receivePushNotifications: boolean; // True by default
+  receivePushNotifications!: boolean; // True by default
 
   @ApiProperty({
     description: 'Whether the user wants to receive email notifications',
@@ -147,7 +147,7 @@ export class User {
     default: true,
   })
   @Column({ type: 'boolean', default: true })
-  receiveEmailNotifications: boolean; // True by default
+  receiveEmailNotifications!: boolean; // True by default
 
   @ApiProperty({
     description: 'Firebase Cloud Messaging Device Token',
@@ -163,7 +163,7 @@ export class User {
     lazy: true,
   })
   @ApiHideProperty()
-  opportunities: Opportunity[]; // Opportunities posted by this NGO
+  opportunities!: Opportunity[]; // Opportunities posted by this NGO
 
   // <-- NEW: Relationship for Volunteers to applications -->
   @ApiProperty({ type: () => Application })
@@ -171,5 +171,14 @@ export class User {
     lazy: true,
   })
   @ApiHideProperty() // Hide from Swagger schema to prevent circular issues
-  applications: Application[]; // Applications made by this volunteer
+  applications!: Application[]; // Applications made by this volunteer
+
+  // if the user has completed their profile (used for onboarding flow)
+  @ApiProperty({
+    description: 'Whether the user has completed their profile',
+    example: true,
+    default: false,
+  })
+  @Column({ type: 'boolean', default: false })
+  isProfileComplete!: boolean; // False by default
 }
