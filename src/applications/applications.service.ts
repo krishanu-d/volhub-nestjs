@@ -99,6 +99,7 @@ export class ApplicationsService {
         const ngoRecipient: INotificationRecipient = {
           user_id: opportunity.ngoId.toString(), // Convert ID to string for consistency with Go
           email_address: ngoData.email,
+          device_token: ngoData.fcmToken,
           prefs: {
             receive_email: ngoData.receiveEmailNotifications,
             receive_push: ngoData.receivePushNotifications,
@@ -132,7 +133,7 @@ export class ApplicationsService {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to publish NEW_APPLICATION event for Application ID ${savedApplication.id}: ${error.message}`,
+        `Failed to publish NEW_APPLICATION event for Application ID ${savedApplication.id}: ${error}`,
       );
     }
 
@@ -233,7 +234,7 @@ export class ApplicationsService {
       try {
         let recipient: INotificationRecipient;
         let payload: INotificationPayload;
-        let routingKey: RabbitMQRoutingKey =
+        const routingKey: RabbitMQRoutingKey =
           RabbitMQRoutingKey.APPLICATION_STATUS_CHANGED; // This can be default
         let eventType: RabbitMQEventType;
 
@@ -253,7 +254,7 @@ export class ApplicationsService {
         switch (updatedApplication.status) {
           case ApplicationStatus.ACCEPTED:
           case ApplicationStatus.REJECTED:
-          case ApplicationStatus.COMPLETED:
+          case ApplicationStatus.COMPLETED: {
             // Recipient is the Volunteer
             const volunteer = updatedApplication.volunteer;
             // You'd fetch device tokens here if you have a UserDevice repository
@@ -262,7 +263,7 @@ export class ApplicationsService {
             recipient = {
               user_id: volunteer.id.toString(),
               email_address: volunteer.email,
-              device_token: undefined, // Replace with volunteerDevice?.fcmToken if fetched
+              device_token: volunteer.fcmToken, // Replace with volunteerDevice?.fcmToken if fetched
               prefs: {
                 receive_email: volunteer.receiveEmailNotifications,
                 receive_push: volunteer.receivePushNotifications,
@@ -300,8 +301,8 @@ export class ApplicationsService {
               eventType = RabbitMQEventType.APPLICATION_STATUS_CHANGED;
             }
             break;
-
-          case ApplicationStatus.WITHDRAWN:
+          }
+          case ApplicationStatus.WITHDRAWN: {
             // Recipient is the NGO
             const ngo = updatedApplication.opportunity.ngo;
             // You'd fetch device tokens here if you have a UserDevice repository
@@ -310,7 +311,7 @@ export class ApplicationsService {
             recipient = {
               user_id: ngo.id.toString(),
               email_address: ngo.email,
-              device_token: undefined, // Replace with ngoDevice?.fcmToken if fetched
+              device_token: ngo.fcmToken, // Replace with ngoDevice?.fcmToken if fetched
               prefs: {
                 receive_email: ngo.receiveEmailNotifications,
                 receive_push: ngo.receivePushNotifications,
@@ -334,12 +335,14 @@ export class ApplicationsService {
             };
             eventType = RabbitMQEventType.APPLICATION_WITHDRAWN;
             break;
+          }
 
-          default:
+          default: {
             this.logger.warn(
               `No notification logic defined for status: ${updatedApplication.status}`,
             );
             return updatedApplication; // Don't send notification for unhandled statuses
+          }
         }
 
         // Publish the structured notification using the correct method
@@ -361,8 +364,8 @@ export class ApplicationsService {
         );
       } catch (error) {
         this.logger.error(
-          `Failed to publish application status event for Application ID ${updatedApplication.id}: ${error.message}`,
-          error.stack, // Include stack for better debugging
+          `Failed to publish application status event for Application ID ${updatedApplication.id}: ${error}`,
+          error, // Include stack for better debugging
         );
       }
     }
@@ -404,6 +407,7 @@ export class ApplicationsService {
     }
 
     application.status = ApplicationStatus.WITHDRAWN;
+    const oldStatus = application.status;
     const updatedApplication =
       await this.applicationsRepository.save(application);
 
@@ -434,7 +438,7 @@ export class ApplicationsService {
           subject: `Application Withdrawn: ${volunteer.name} for ${opportunity.title}`,
           deep_link: `/ngo/opportunities/${opportunity.id}/applications/${updatedApplication.id}`,
           application_id: updatedApplication.id,
-          old_status: ApplicationStatus.PENDING, // Assuming it was pending before withdrawal
+          old_status: oldStatus,
           new_status: updatedApplication.status,
           opportunity_id: opportunity.id,
           opportunity_title: opportunity.title,
@@ -457,7 +461,7 @@ export class ApplicationsService {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to publish WITHDRAWAL event for Application ID ${updatedApplication.id}: ${error.message}`,
+        `Failed to publish WITHDRAWAL event for Application ID ${updatedApplication.id}: ${error}`,
       );
     }
 

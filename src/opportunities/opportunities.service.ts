@@ -1,21 +1,18 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ReturningStatementNotSupportedError } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Opportunity } from './entities/opportunity.entity';
 import { CreateOpportunityDto } from './dto/create-opportunity.dto';
 import { UpdateOpportunityDto } from './dto/update-opportunity.dto';
 import { FindOpportunitiesQueryDto } from './dto/find-opportunities-query.dto';
 import {
   OpportunityCategory,
-  OpportunityOrderBy,
   OpportunitySortBy,
-  OrderDirection,
   RabbitMQEventType,
   RabbitMQRoutingKey,
   SortOrder,
@@ -111,7 +108,7 @@ export class OpportunitiesService {
 
     // --- 2. Determine Effective Location for Filtering and Sorting ---
     let effectiveLatitude: number | undefined;
-    let effectiveLongitude: number | number | undefined;
+    let effectiveLongitude: number | undefined;
     let effectiveRadiusKm: number | undefined; // This will hold the effective radius
 
     // Priority 1: Location provided in query parameters
@@ -341,8 +338,8 @@ export class OpportunitiesService {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to publish UPDATE_OPPORTUNITY event for Opportunity ID ${updatedOpportunity.id}: ${error.message}`,
-        error.stack,
+        `Failed to publish UPDATE_OPPORTUNITY event for Opportunity ID ${updatedOpportunity.id}: ${error}`,
+        error,
       );
     }
 
